@@ -1,0 +1,8 @@
+.pio
+.vscode
+.DS_Store
+*.pyc
+*.bin
+*.elf
+*.map
+libdeps/

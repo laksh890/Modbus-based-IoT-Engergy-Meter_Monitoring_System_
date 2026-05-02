@@ -1,158 +1,129 @@
-# ⚡ IoT Energy & BTU Monitoring System
+# ⚡ Modbus-Based IoT Energy & BTU Monitoring System
 
-A real-time industrial-grade monitoring system built using ESP32, designed to collect electrical and thermal parameters via Modbus RTU and push them to the cloud using Firebase Realtime Database.
+[![PlatformIO](https://img.shields.io/badge/Platform-IO-orange?style=for-the-badge&logo=platformio)](https://platformio.org/)
+[![ESP32](https://img.shields.io/badge/ESP-32-blue?style=for-the-badge&logo=espressif)](https://www.espressif.com/en/products/socs/esp32)
+[![Firebase](https://img.shields.io/badge/Firebase-Realtime%20DB-yellow?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-This system is ideal for Building Management Systems (BMS), HVAC monitoring, and industrial energy analytics.
+A scalable, industrial-grade monitoring system designed for Building Management Systems (BMS) and HVAC applications. This firmware collects electrical and thermal data via **Modbus RTU** using an ESP32 and pushes real-time analytics to **Firebase Cloud**.
 
-🚀 Features
-📡 Modbus RTU Communication
-Reads data from energy meters and BTU meters
-⚡ Electrical Parameter Monitoring
-Voltage (VLN)
-Current (Irms)
-Power (W)
-Energy (Wh)
-Power Factor
-Frequency
+---
 
+## 🚀 Key Features
 
-🌡 Thermal Monitoring (BTU Meter)
-Flow rate
-Hot & Cold temperatures
-Temperature difference
-Energy in BTU
+*   **Multi-Channel Modbus RTU**: Independent handling of Energy Meters and Environmental Sensors.
+*   **Real-Time Cloud Sync**: Seamless integration with Firebase Realtime Database.
+*   **Scalable Architecture**: Modular PlatformIO codebase for easy expansion to hundreds of nodes.
+*   **Precision Timekeeping**: NTP-based ISO 8601 timestamping for all data points.
+*   **Robust Error Handling**: Integrated Modbus communication diagnostics and offline device detection.
 
-☁️ Cloud Integration
-Sends real-time data to Firebase
-
-🕒 Time Synchronization
-Uses NTP for accurate timestamping
-
-🔌 Multi-Device Support
-Multiple RS485 channels for scalability
+---
 
 ## 🧠 System Architecture
-Energy Meter / BTU Meter
-        │
-   RS485 (Modbus RTU)
-        │
-      ESP32
-        │
-   WiFi Network
-        │
-   Firebase Realtime DB
-        │
-   Dashboard / BMS
 
-## 🛠 Hardware Used
-ESP32
-RS485 to TTL Converter (MAX485)
-Energy Meter (Modbus compatible)
-BTU Meter
-Temperature Sensors (Integrated with BTU meter)
+```mermaid
+graph TD
+    subgraph Field_Devices [Field Layer]
+        EM1[Energy Meter 1] -- Modbus RTU (Ch 1) --> ESP32
+        EM2[Energy Meter 2] -- Modbus RTU (Ch 1) --> ESP32
+        TH1[Temp/Hum Sensor] -- Modbus RTU (Ch 2) --> ESP32
+        BTU[BTU Meter] -- Modbus RTU (Ch 2) --> ESP32
+    end
 
+    subgraph Controller [Intelligence Layer]
+        ESP32[ESP32 Gateway]
+        ESP32 --> WiFi[WiFi Connection]
+    end
 
-## 📦 Libraries Used
-#include <HardwareSerial.h>
-#include <ModbusMaster.h>
-#include <WiFi.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
-#include <ESP32Firebase.h>
-#include <ArduinoJson.h>
+    subgraph Cloud [Data Layer]
+        WiFi --> FB[Firebase Realtime DB]
+        FB --> Dash[Web Dashboard / App]
+    end
+```
 
+---
 
-## 🔌 Pin Configuration
-Function	Pin
-MAX485 DE (0)	33
-MAX485 RE (0)	32
-MAX485 DE (1)	25
-MAX485 RE (1)	26
-MAX485 DE (2)	4
-MAX485 RE (2)	2
-RX (Channel 2)	16
-TX (Channel 2)	17
-RX (Channel 1)	21
-TX (Channel 1)	19
-RX (Channel 0)	3
-TX (Channel 0)	1
+## 🛠 Hardware Specifications
 
+| Component | Role | Pins (ESP32) |
+| :--- | :--- | :--- |
+| **ESP32** | Main Controller | - |
+| **MAX485 (Ch 1)** | Energy Meter Interface | RX:21, TX:19, DE:25, RE:26 |
+| **MAX485 (Ch 2)** | Sensor/BTU Interface | RX:16, TX:17, DE:4, RE:2 |
+| **Energy Meters** | Electrical Monitoring | Modbus Slave 101, 102 |
+| **TH Sensors** | Climate Monitoring | Modbus Slave 1-5 |
 
-## 📡 Data Parameters Collected
-Electrical Data
-Total Energy (Wh)
-Power (W)
-Current (A)
-Voltage (V)
-Frequency (Hz)
-Power Factor
-Thermal / BTU Data
-Flow Rate
-Temperature (Hot & Cold)
-Temperature Difference
-BTU Energy
-Thermal Power
+---
 
-## ☁️ Firebase Configuration
-#define REFERENCE_URL "https://your-project.firebaseio.com"
-const String FIREBASE_AUTH = "YOUR_API_KEY";
-const String FIREBASE_PATH = "/energyMeters/meter1/data";
+## 📂 Project Structure
 
+```text
+.
+├── include/
+│   └── config.h          # Global configuration (WiFi, Firebase, Pins)
+├── src/
+│   ├── main.cpp          # Application orchestration
+│   ├── modbus_handler.cpp# Modbus communication logic
+│   ├── cloud_handler.cpp # WiFi, Firebase & NTP logic
+│   └── ...
+├── platformio.ini        # Dependency management & build settings
+└── README.md             # Documentation
+```
 
-## 🌐 WiFi Configuration
-const char* ssid     = "YOUR_WIFI";
-const char* password = "YOUR_PASSWORD";
+---
 
-## 🕒 Time Sync
-Uses NTP (pool.ntp.org)
-Configurable offset for timezone
-Ensures accurate logging
+## 📊 Dashboard Visualization
 
-## 🔍 Key Functions Explained
-get_address_value()
-Reads Modbus registers
-Handles communication errors
-Converts 16-bit / 32-bit values
-get_generator_value_energy()
-Reads electrical parameters
-Updates global variables
-get_generator_value()
-Reads BTU-related parameters
+Real-time monitoring and analytics provided by the cloud dashboard:
 
-## ⚠️ Error Handling
+| Overview | Energy Analytics | BTU Monitoring |
+| :---: | :---: | :---: |
+| ![Main Dashboard](docs/assets/dashboard_main.png) | ![Energy Data](docs/assets/dashboard_energy.png) | ![BTU Data](docs/assets/dashboard_btu.png) |
 
-The system handles:
+---
 
-Modbus timeout
-CRC errors
-Invalid slave response
-Illegal register access
+## 🔧 Getting Started
 
+### 1. Prerequisites
+*   Install [VS Code](https://code.visualstudio.com/)
+*   Install [PlatformIO IDE extension](https://platformio.org/install/ide/vscode)
 
-## 🧪 Use Cases
-🏢 Building Management Systems (BMS)
-❄️ HVAC Monitoring
-⚡ Energy Auditing
-🏭 Industrial Automation
-📊 Smart Energy Analytics
+### 2. Configuration
+Edit `include/config.h` to update your credentials:
+```cpp
+const char* WIFI_SSID     = "YOUR_SSID";
+const char* WIFI_PASSWORD = "YOUR_PASSWORD";
+#define FIREBASE_REFERENCE_URL "https://your-project.firebaseio.com"
+```
 
-## 📈 Future Improvements
-Web dashboard for visualization
-MQTT support
-Edge AI for anomaly detection
-OTA firmware updates
-Multi-node distributed system
-🔐 Security Notes
-Do not expose Firebase API keys publicly
-Use authentication rules in Firebase
-Consider HTTPS + token-based auth
-📄 License
+### 3. Build & Upload
+1.  Connect your ESP32.
+2.  Click the **PlatformIO: Build** icon.
+3.  Click the **PlatformIO: Upload** icon.
+4.  Open the Serial Monitor (9600 baud) to view logs.
 
-MIT License
+---
+
+## 📊 Data Schema
+Data is pushed to Firebase in the following structure:
+```json
+{
+  "energyMeters": {
+    "meterH11": {
+      "energy": 1234.5,
+      "watts": 250.0,
+      "timestamp": "2024-05-02T16:00:00Z"
+    }
+  }
+}
+```
+
+---
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👨‍💻 Author
-
-Lakshay Gandotra
-
-IoT | Embedded Systems | Smart Infrastructure
-Focused on real-world scalable engineering solutions
+**Lakshay Gandotra**  
+*IoT & Embedded Systems Engineer*  
+[GitHub](https://github.com/laksh890)
